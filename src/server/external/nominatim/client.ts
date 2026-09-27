@@ -2,6 +2,7 @@ type NominatimSearchResult = {
   display_name: string;
   lat: string;
   lon: string;
+  source?: "nominatim" | "photon" | "local";
   name?: string;
   type?: string;
   class?: string;
@@ -72,6 +73,7 @@ const NOMINATIM_BASE_URL = (process.env.NOMINATIM_BASE_URL?.trim() || DEFAULT_NO
 const PHOTON_BASE_URL = (process.env.PHOTON_BASE_URL?.trim() || "https://photon.komoot.io").replace(/\/+$/, "");
 const USER_AGENT = process.env.NOMINATIM_USER_AGENT ?? "FloodCheckThailand/0.1 (public flood preparedness prototype; contact: admin@flood-check-thailand.local)";
 const CONTACT_EMAIL = process.env.NOMINATIM_EMAIL;
+const GEOCODER_TIMEOUT_MS = 6000;
 
 async function fetchNominatim<T>(path: string, searchParams: URLSearchParams): Promise<T> {
   const url = `${NOMINATIM_BASE_URL}${path}?${searchParams.toString()}`;
@@ -82,13 +84,21 @@ async function fetchNominatim<T>(path: string, searchParams: URLSearchParams): P
       "User-Agent": USER_AGENT,
     },
     next: { revalidate: 60 * 60 },
+    signal: AbortSignal.timeout(GEOCODER_TIMEOUT_MS),
   });
 
   if (!response.ok) {
     throw new Error(`Nominatim request failed with ${response.status}`);
   }
 
-  return response.json() as Promise<T>;
+  const data = (await response.json()) as T;
+  if (Array.isArray(data)) {
+    return data.map((result) => ({ ...result, source: "nominatim" })) as T;
+  }
+  if (data && typeof data === "object") {
+    return { ...data, source: "nominatim" } as T;
+  }
+  return data;
 }
 
 function photonDisplayName(properties: NonNullable<PhotonFeature["properties"]>) {
@@ -118,6 +128,7 @@ function mapPhotonFeature(feature: PhotonFeature): NominatimSearchResult | null 
     display_name: photonDisplayName(properties) || `${lat}, ${lon}`,
     lat: String(lat),
     lon: String(lon),
+    source: "photon",
     name: properties.name,
     type: properties.osm_value ?? properties.type,
     class: properties.osm_key,
@@ -140,6 +151,7 @@ async function searchPhoton(query: string, limit = 10) {
   const response = await fetch(`${PHOTON_BASE_URL}/api/?${params.toString()}`, {
     headers: { Accept: "application/json", "User-Agent": USER_AGENT },
     next: { revalidate: 60 * 60 },
+    signal: AbortSignal.timeout(GEOCODER_TIMEOUT_MS),
   });
 
   if (!response.ok) {
@@ -158,6 +170,7 @@ async function reversePhoton(lat: number, lng: number) {
   const response = await fetch(`${PHOTON_BASE_URL}/reverse?${params.toString()}`, {
     headers: { Accept: "application/json", "User-Agent": USER_AGENT },
     next: { revalidate: 60 * 60 },
+    signal: AbortSignal.timeout(GEOCODER_TIMEOUT_MS),
   });
 
   if (!response.ok) {

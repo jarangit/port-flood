@@ -11,6 +11,77 @@ const MAX_NEARBY_CHOICES = 5;
 const POI_CLASSES = new Set(["amenity", "shop", "tourism", "building", "office", "leisure"]);
 const AREA_CLASSES = new Set(["boundary", "place"]);
 
+type RawGeocodeResult = Awaited<ReturnType<typeof searchThailandPlaces>>[number];
+
+const LOCAL_FALLBACK_PLACES: Array<RawGeocodeResult & { keywords: string[] }> = [
+  {
+    display_name: "ฟิวเจอร์พาร์ครังสิต, ตำบลประชาธิปัตย์, รังสิต, อำเภอธัญบุรี, จังหวัดปทุมธานี, ประเทศไทย",
+    lat: "13.9890",
+    lon: "100.6186",
+    source: "local",
+    name: "ฟิวเจอร์พาร์ครังสิต",
+    class: "shop",
+    type: "mall",
+    address: {
+      province: "จังหวัดปทุมธานี",
+      city: "รังสิต",
+      county: "อำเภอธัญบุรี",
+      suburb: "ตำบลประชาธิปัตย์",
+      postcode: "12130",
+    },
+    keywords: ["ฟิว", "ฟิวเจอร์", "ฟิวเต", "future", "future park", "รังสิต", "rangsit"],
+  },
+  {
+    display_name: "กรุงเทพมหานคร, ประเทศไทย",
+    lat: "13.7525",
+    lon: "100.4935",
+    source: "local",
+    name: "กรุงเทพมหานคร",
+    class: "place",
+    type: "city",
+    address: { province: "กรุงเทพมหานคร", city: "กรุงเทพมหานคร" },
+    keywords: ["กรุงเทพ", "กรุงเทพมหานคร", "bangkok", "bkk"],
+  },
+  {
+    display_name: "จังหวัดปทุมธานี, ประเทศไทย",
+    lat: "14.0208",
+    lon: "100.5250",
+    source: "local",
+    name: "จังหวัดปทุมธานี",
+    class: "place",
+    type: "province",
+    address: { province: "จังหวัดปทุมธานี", city: "ปทุมธานี" },
+    keywords: ["ปทุม", "ปทุมธานี", "pathum", "pathum thani"],
+  },
+  {
+    display_name: "ดอนเมือง, กรุงเทพมหานคร, ประเทศไทย",
+    lat: "13.9133",
+    lon: "100.6042",
+    source: "local",
+    name: "ดอนเมือง",
+    class: "place",
+    type: "district",
+    address: { province: "กรุงเทพมหานคร", city: "กรุงเทพมหานคร", district: "ดอนเมือง" },
+    keywords: ["ดอนเมือง", "don mueang", "donmuang", "สนามบินดอนเมือง"],
+  },
+];
+
+function normalizeSearchText(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function localFallbackPlaces(query: string) {
+  const normalized = normalizeSearchText(query);
+  if (!normalized) return [];
+
+  return LOCAL_FALLBACK_PLACES.filter((place) =>
+    place.keywords.some((keyword) => {
+      const normalizedKeyword = normalizeSearchText(keyword);
+      return normalized.includes(normalizedKeyword) || normalizedKeyword.includes(normalized);
+    }),
+  );
+}
+
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
@@ -87,7 +158,7 @@ export async function geocodeThailand(query: string) {
   }
 
   const isPostcode = POSTCODE_PATTERN.test(trimmed);
-  let rawResults: Awaited<ReturnType<typeof searchThailandPlaces>> = [];
+  let rawResults: RawGeocodeResult[] = [];
 
   try {
     rawResults = isPostcode ? await searchThailandPostcode(trimmed) : [];
@@ -104,7 +175,7 @@ export async function geocodeThailand(query: string) {
     const province = pickProvince(rawResults[0].address);
     if (Number.isFinite(anchorLat) && Number.isFinite(anchorLng) && !district.startsWith("ไม่ทราบ")) {
       const areaQuery = province.startsWith("ไม่ทราบ") ? district : `${district} ${province}`;
-      let siblings: Awaited<ReturnType<typeof searchThailandPlaces>> = [];
+      let siblings: RawGeocodeResult[] = [];
       try {
         siblings = await searchThailandPlaces(areaQuery);
       } catch {
@@ -140,6 +211,9 @@ export async function geocodeThailand(query: string) {
       rawResults = [];
     }
   }
+  if (rawResults.length === 0) {
+    rawResults = localFallbackPlaces(trimmed);
+  }
 
   const seen = new Set<string>();
   const results = rawResults
@@ -168,7 +242,12 @@ export async function geocodeThailand(query: string) {
         district: pickDistrict(result.address),
         subdistrict: pickSubdistrict(result.address),
         postcode: pickPostcode(result.address),
-        source: "OpenStreetMap Nominatim",
+        source:
+          result.source === "photon"
+            ? "Photon / OpenStreetMap"
+            : result.source === "local"
+              ? "ท่วมไทย fallback"
+              : "OpenStreetMap Nominatim",
       };
     })
     .filter((result): result is NonNullable<typeof result> => result !== null);

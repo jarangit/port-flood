@@ -91,14 +91,14 @@ const riskTone: Record<RiskLevel, string> = {
   low: "bg-emerald-400",
   medium: "bg-yellow-400",
   high: "bg-orange-500",
-  very_high: "bg-rose-500",
+  very_high: "bg-red-700",
 };
 
 const riskCardTone: Record<RiskLevel, string> = {
   low: "border-emerald-100 bg-emerald-50 text-emerald-800",
   medium: "border-yellow-100 bg-yellow-50 text-yellow-800",
   high: "border-orange-100 bg-orange-50 text-orange-800",
-  very_high: "border-rose-100 bg-rose-50 text-rose-800",
+  very_high: "border-red-200 bg-red-50 text-red-900",
 };
 
 const loadingSteps = [
