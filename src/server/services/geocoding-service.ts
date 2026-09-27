@@ -1,0 +1,187 @@
+import { isCoordinateInThailand } from "@/lib/validation";
+import {
+  reverseThailandPlace,
+  searchThailandPlaces,
+  searchThailandPostcode,
+} from "@/server/external/nominatim/client";
+
+const POSTCODE_PATTERN = /^\d{5}$/;
+const NEARBY_CHOICE_RADIUS_KM = 12;
+const MAX_NEARBY_CHOICES = 5;
+const POI_CLASSES = new Set(["amenity", "shop", "tourism", "building", "office", "leisure"]);
+const AREA_CLASSES = new Set(["boundary", "place"]);
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(a));
+}
+
+function pickProvince(address?: Record<string, string | undefined>) {
+  return address?.province ?? address?.state ?? "ไม่ทราบจังหวัด";
+}
+
+function pickDistrict(address?: Record<string, string | undefined>) {
+  return address?.city ?? address?.town ?? address?.municipality ?? address?.county ?? address?.district ?? "ไม่ทราบอำเภอ/เขต";
+}
+
+function pickSubdistrict(address?: Record<string, string | undefined>) {
+  return address?.suburb ?? address?.village ?? address?.hamlet ?? "ไม่ทราบตำบล/แขวง";
+}
+
+function pickPostcode(address?: Record<string, string | undefined>) {
+  return address?.postcode ?? null;
+}
+
+function pickPlaceName(result: Awaited<ReturnType<typeof searchThailandPlaces>>[number]) {
+  return (
+    result.name ??
+    result.address?.amenity ??
+    result.address?.shop ??
+    result.address?.tourism ??
+    result.address?.building ??
+    result.address?.office ??
+    result.address?.leisure ??
+    result.address?.road ??
+    pickSubdistrict(result.address)
+  );
+}
+
+function categoryLabel(result: Awaited<ReturnType<typeof searchThailandPlaces>>[number]) {
+  if (result.class === "shop") return "ร้านค้า/ห้าง";
+  if (result.class === "amenity") {
+    if (result.type === "hospital" || result.type === "clinic") return "โรงพยาบาล/คลินิก";
+    if (result.type === "school" || result.type === "university" || result.type === "college") return "สถานศึกษา";
+    if (result.type === "fuel") return "ปั๊มน้ำมัน";
+    return "สถานที่";
+  }
+  if (result.class === "tourism") return "สถานที่ท่องเที่ยว";
+  if (result.class === "building") return "อาคาร/หมู่บ้าน";
+  if (result.class === "office") return "สำนักงาน";
+  if (result.class === "leisure") return "สถานที่พักผ่อน";
+  if (result.class === "highway") return "ถนน";
+  return AREA_CLASSES.has(result.class ?? "") ? "พื้นที่" : "สถานที่";
+}
+
+function rankSearchResult(query: string, result: Awaited<ReturnType<typeof searchThailandPlaces>>[number]) {
+  const normalizedQuery = query.toLowerCase();
+  const name = pickPlaceName(result).toLowerCase();
+  let score = result.importance ? result.importance * 10 : 0;
+
+  if (POI_CLASSES.has(result.class ?? "")) score += 30;
+  if (AREA_CLASSES.has(result.class ?? "")) score -= 10;
+  if (name && normalizedQuery.includes(name)) score += 12;
+  if (name && name.includes(normalizedQuery)) score += 18;
+  if (result.addresstype === "postcode") score -= 15;
+
+  return score;
+}
+
+export async function geocodeThailand(query: string) {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return { query, isPostcode: false, results: [] };
+  }
+
+  const isPostcode = POSTCODE_PATTERN.test(trimmed);
+  let rawResults = isPostcode ? await searchThailandPostcode(trimmed) : [];
+  if (isPostcode && rawResults.length > 0) {
+    // Nominatim resolves a postcode to a single centroid, so add named places
+    // from the same district as sibling choices instead of auto-picking.
+    const anchorLat = Number(rawResults[0].lat);
+    const anchorLng = Number(rawResults[0].lon);
+    const district = pickDistrict(rawResults[0].address);
+    const province = pickProvince(rawResults[0].address);
+    if (Number.isFinite(anchorLat) && Number.isFinite(anchorLng) && !district.startsWith("ไม่ทราบ")) {
+      const areaQuery = province.startsWith("ไม่ทราบ") ? district : `${district} ${province}`;
+      const siblings = await searchThailandPlaces(areaQuery);
+      const nearby = siblings
+        .filter((candidate) => {
+          const lat = Number(candidate.lat);
+          const lng = Number(candidate.lon);
+          // Skip coarse area centroids with no named sub-area and no postcode.
+          const named =
+            candidate.address?.suburb ??
+            candidate.address?.village ??
+            candidate.address?.hamlet ??
+            candidate.address?.postcode;
+          return (
+            Number.isFinite(lat) &&
+            Number.isFinite(lng) &&
+            named !== undefined &&
+            haversineKm(anchorLat, anchorLng, lat, lng) <= NEARBY_CHOICE_RADIUS_KM
+          );
+        })
+        .slice(0, MAX_NEARBY_CHOICES);
+      rawResults = [...rawResults, ...nearby];
+    }
+  }
+  // A postcode can cover several subdistricts, but if the structured lookup
+  // finds nothing, fall back to a plain text search before giving up.
+  if (rawResults.length === 0) {
+    rawResults = await searchThailandPlaces(trimmed);
+  }
+
+  const seen = new Set<string>();
+  const results = rawResults
+    .sort((a, b) => rankSearchResult(trimmed, b) - rankSearchResult(trimmed, a))
+    .map((result) => {
+      const lat = Number(result.lat);
+      const lng = Number(result.lon);
+
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || !isCoordinateInThailand(lat, lng)) {
+        return null;
+      }
+
+      const dedupeKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+      if (seen.has(dedupeKey)) {
+        return null;
+      }
+      seen.add(dedupeKey);
+
+      return {
+        label: result.display_name,
+        name: pickPlaceName(result),
+        category: categoryLabel(result),
+        lat,
+        lng,
+        province: pickProvince(result.address),
+        district: pickDistrict(result.address),
+        subdistrict: pickSubdistrict(result.address),
+        postcode: pickPostcode(result.address),
+        source: "OpenStreetMap Nominatim",
+      };
+    })
+    .filter((result): result is NonNullable<typeof result> => result !== null);
+
+  return { query, isPostcode, results };
+}
+
+export async function reverseGeocodeThailand(lat: number, lng: number, zoom = 14) {
+  if (!isCoordinateInThailand(lat, lng)) {
+    return {
+      error: {
+        code: "OUTSIDE_THAILAND",
+        message: "พิกัดนี้อยู่นอกประเทศไทย",
+      },
+    } as const;
+  }
+
+  const result = await reverseThailandPlace(lat, lng, zoom);
+
+  return {
+    location: {
+      lat,
+      lng,
+      province: pickProvince(result.address),
+      district: pickDistrict(result.address),
+      subdistrict: pickSubdistrict(result.address),
+      basin: "ยังไม่มีข้อมูลลุ่มน้ำ",
+    },
+    label: result.display_name,
+    sources: [{ name: "OpenStreetMap Nominatim", updatedAt: new Date().toISOString() }],
+  } as const;
+}

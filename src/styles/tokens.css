@@ -1,0 +1,65 @@
+:root {
+  --font-sans: "Noto Sans Thai", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --background: 210 40% 98%;
+  --foreground: 215 28% 17%;
+  --card: 0 0% 100%;
+  --card-foreground: 215 28% 17%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 215 28% 17%;
+  --primary: 204 79% 32%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 204 28% 92%;
+  --secondary-foreground: 205 44% 22%;
+  --muted: 210 28% 93%;
+  --muted-foreground: 215 14% 42%;
+  --accent: 185 45% 88%;
+  --accent-foreground: 190 65% 20%;
+  --destructive: 0 72% 44%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 212 22% 86%;
+  --input: 212 22% 86%;
+  --ring: 204 79% 32%;
+
+  --risk-low: 158 64% 32%;
+  --risk-medium: 42 92% 36%;
+  --risk-high: 25 89% 42%;
+  --risk-very-high: 0 72% 44%;
+
+  --status-normal: 158 64% 32%;
+  --status-watch: 204 79% 32%;
+  --status-warning: 35 92% 41%;
+  --status-critical: 0 72% 44%;
+
+  --card-risk-background: 204 45% 96%;
+  --card-risk-border: 204 32% 82%;
+  --badge-critical-background: 0 72% 95%;
+  --badge-critical-foreground: 0 72% 34%;
+  --map-control-background: 0 0% 100%;
+  --map-control-border: 212 22% 86%;
+  --alert-banner-border: 35 92% 70%;
+
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: 215 30% 10%;
+  --foreground: 210 40% 96%;
+  --card: 215 28% 13%;
+  --card-foreground: 210 40% 96%;
+  --popover: 215 28% 13%;
+  --popover-foreground: 210 40% 96%;
+  --primary: 199 89% 58%;
+  --primary-foreground: 215 30% 10%;
+  --secondary: 215 24% 20%;
+  --secondary-foreground: 210 40% 96%;
+  --muted: 215 24% 20%;
+  --muted-foreground: 214 18% 72%;
+  --accent: 188 42% 22%;
+  --accent-foreground: 185 45% 88%;
+  --destructive: 0 72% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 215 20% 24%;
+  --input: 215 20% 24%;
+  --ring: 199 89% 58%;
+}
