@@ -227,7 +227,7 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
           lat={lat}
           lng={lng}
           risk={risk.baselineRisk}
-          caption={`${risk.location.subdistrict} · ${risk.location.district} · ${risk.location.province}`}
+          caption={`${displayAdminName(risk.location.subdistrict)} · ${displayAdminName(risk.location.district)} · ${displayAdminName(risk.location.province)}`}
         />
 
         {/* hidden details */}

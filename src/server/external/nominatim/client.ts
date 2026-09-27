@@ -39,7 +39,11 @@ type NominatimReverseResult = {
   address?: NominatimSearchResult["address"];
 };
 
-const NOMINATIM_BASE_URL = process.env.NOMINATIM_BASE_URL ?? "https://nominatim.openstreetmap.org";
+const DEFAULT_NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org";
+const NOMINATIM_BASE_URL = (process.env.NOMINATIM_BASE_URL?.trim() || DEFAULT_NOMINATIM_BASE_URL).replace(
+  /\/+$/,
+  "",
+);
 const USER_AGENT = process.env.NOMINATIM_USER_AGENT ?? "FloodCheckThailand/0.1 (public flood preparedness prototype; contact: admin@flood-check-thailand.local)";
 const CONTACT_EMAIL = process.env.NOMINATIM_EMAIL;
 

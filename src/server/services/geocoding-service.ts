@@ -87,7 +87,14 @@ export async function geocodeThailand(query: string) {
   }
 
   const isPostcode = POSTCODE_PATTERN.test(trimmed);
-  let rawResults = isPostcode ? await searchThailandPostcode(trimmed) : [];
+  let rawResults: Awaited<ReturnType<typeof searchThailandPlaces>> = [];
+
+  try {
+    rawResults = isPostcode ? await searchThailandPostcode(trimmed) : [];
+  } catch {
+    rawResults = [];
+  }
+
   if (isPostcode && rawResults.length > 0) {
     // Nominatim resolves a postcode to a single centroid, so add named places
     // from the same district as sibling choices instead of auto-picking.
@@ -97,7 +104,12 @@ export async function geocodeThailand(query: string) {
     const province = pickProvince(rawResults[0].address);
     if (Number.isFinite(anchorLat) && Number.isFinite(anchorLng) && !district.startsWith("ไม่ทราบ")) {
       const areaQuery = province.startsWith("ไม่ทราบ") ? district : `${district} ${province}`;
-      const siblings = await searchThailandPlaces(areaQuery);
+      let siblings: Awaited<ReturnType<typeof searchThailandPlaces>> = [];
+      try {
+        siblings = await searchThailandPlaces(areaQuery);
+      } catch {
+        siblings = [];
+      }
       const nearby = siblings
         .filter((candidate) => {
           const lat = Number(candidate.lat);
@@ -122,7 +134,11 @@ export async function geocodeThailand(query: string) {
   // A postcode can cover several subdistricts, but if the structured lookup
   // finds nothing, fall back to a plain text search before giving up.
   if (rawResults.length === 0) {
-    rawResults = await searchThailandPlaces(trimmed);
+    try {
+      rawResults = await searchThailandPlaces(trimmed);
+    } catch {
+      rawResults = [];
+    }
   }
 
   const seen = new Set<string>();
@@ -170,18 +186,33 @@ export async function reverseGeocodeThailand(lat: number, lng: number, zoom = 14
     } as const;
   }
 
-  const result = await reverseThailandPlace(lat, lng, zoom);
+  try {
+    const result = await reverseThailandPlace(lat, lng, zoom);
 
-  return {
-    location: {
-      lat,
-      lng,
-      province: pickProvince(result.address),
-      district: pickDistrict(result.address),
-      subdistrict: pickSubdistrict(result.address),
-      basin: "ยังไม่มีข้อมูลลุ่มน้ำ",
-    },
-    label: result.display_name,
-    sources: [{ name: "OpenStreetMap Nominatim", updatedAt: new Date().toISOString() }],
-  } as const;
+    return {
+      location: {
+        lat,
+        lng,
+        province: pickProvince(result.address),
+        district: pickDistrict(result.address),
+        subdistrict: pickSubdistrict(result.address),
+        basin: "ยังไม่มีข้อมูลลุ่มน้ำ",
+      },
+      label: result.display_name,
+      sources: [{ name: "OpenStreetMap Nominatim", updatedAt: new Date().toISOString() }],
+    } as const;
+  } catch {
+    return {
+      location: {
+        lat,
+        lng,
+        province: "ไม่ทราบจังหวัด",
+        district: "ไม่ทราบอำเภอ/เขต",
+        subdistrict: "ไม่ทราบตำบล/แขวง",
+        basin: "ยังไม่มีข้อมูลลุ่มน้ำ",
+      },
+      label: `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+      sources: [{ name: "OpenStreetMap Nominatim (fallback)", updatedAt: new Date().toISOString() }],
+    } as const;
+  }
 }
