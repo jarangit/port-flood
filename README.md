@@ -1,4 +1,4 @@
-# Flood Check Thailand
+# ท่วมไทย
 
 Public project concept for a Thailand-wide flood preparedness website inspired by Overstroom ik.
 
@@ -15,7 +15,7 @@ The project helps people check flood risk for a location, understand nearby real
 
 ## Architecture Direction
 
-Flood Check Thailand starts as a single repository with frontend, API routes, backend services, database code, and data-ingestion scripts kept together. Backend boundaries still stay explicit through `src/server`, `src/app/api`, `scripts`, and `db` so the project can split into separate apps later if needed.
+ท่วมไทย starts as a single repository with frontend, API routes, backend services, database code, and data-ingestion scripts kept together. Backend boundaries still stay explicit through `src/server`, `src/app/api`, `scripts`, and `db` so the project can split into separate apps later if needed.
 
 The UI foundation is Flood Safety UI, a `shadcn/ui`-based design system using Tailwind CSS through primitive, semantic, and component-level design tokens.
 

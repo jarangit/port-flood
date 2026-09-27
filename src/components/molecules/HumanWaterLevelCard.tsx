@@ -107,7 +107,7 @@ export function HumanWaterLevelCard({
           <CardDescription className="mt-2 text-base leading-7 text-foreground sm:text-lg">ประมาณ{bodyReference.replace("ประมาณ", "")}ของคนสูง {heightCm} ซม.</CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="grid gap-4 p-4 pt-0 sm:gap-6 sm:p-6 sm:pt-0 lg:grid-cols-[0.9fr_1.1fr]">
+      <CardContent className="grid min-w-0 gap-4 p-4 pt-0 sm:gap-6 sm:p-6 sm:pt-0 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="relative min-h-[380px] overflow-hidden rounded-2xl border bg-card p-3 sm:min-h-[480px] sm:p-4">
           <div className="relative mx-auto h-[340px] w-full max-w-[300px] sm:h-[440px] sm:max-w-[330px]">
             <HumanFloodFigure
@@ -120,9 +120,6 @@ export function HumanWaterLevelCard({
               label={`ระดับน้ำที่สถานี ${figureLabel} ${bodyReference}`}
             />
           </div>
-          <div className="absolute right-4 top-4 rounded-full bg-background px-3 py-1 text-sm text-muted-foreground shadow-sm">
-            {bodyReference}
-          </div>
         </div>
 
         <div className="space-y-4 sm:space-y-5">
@@ -130,9 +127,9 @@ export function HumanWaterLevelCard({
             <Label htmlFor="heightCm" className="text-sm sm:text-base">
               ใส่ส่วนสูงของคุณ
             </Label>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 min-[360px]:flex-row">
               <Input id="heightCm" className="mt-2 h-11 text-base sm:mt-3 sm:h-12 sm:text-lg" inputMode="numeric" min={100} max={230} value={heightInput} onChange={(event) => setHeightInput(event.target.value)} />
-              <Button className="mt-2 h-11 sm:mt-3 sm:h-12" type="button" variant="outline" onClick={() => setHeightInput(String(defaultHeightCm))}>
+              <Button className="h-11 min-[360px]:mt-2 sm:mt-3 sm:h-12" type="button" variant="outline" onClick={() => setHeightInput(String(defaultHeightCm))}>
                 รีเซ็ต
               </Button>
             </div>

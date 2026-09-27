@@ -1,24 +1,24 @@
 :root {
   --font-sans: "Noto Sans Thai", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
 
-  --background: 210 40% 98%;
-  --foreground: 215 28% 17%;
+  --background: 210 24% 97%;
+  --foreground: 220 24% 12%;
   --card: 0 0% 100%;
-  --card-foreground: 215 28% 17%;
+  --card-foreground: 220 24% 12%;
   --popover: 0 0% 100%;
-  --popover-foreground: 215 28% 17%;
+  --popover-foreground: 220 24% 12%;
   --primary: 204 79% 32%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 204 28% 92%;
-  --secondary-foreground: 205 44% 22%;
-  --muted: 210 28% 93%;
-  --muted-foreground: 215 14% 42%;
-  --accent: 185 45% 88%;
+  --secondary: 220 20% 94%;
+  --secondary-foreground: 220 22% 18%;
+  --muted: 220 18% 94%;
+  --muted-foreground: 220 9% 43%;
+  --accent: 185 45% 90%;
   --accent-foreground: 190 65% 20%;
   --destructive: 0 72% 44%;
   --destructive-foreground: 0 0% 100%;
-  --border: 212 22% 86%;
-  --input: 212 22% 86%;
+  --border: 220 16% 88%;
+  --input: 220 16% 88%;
   --ring: 204 79% 32%;
 
   --risk-low: 158 64% 32%;
@@ -36,10 +36,12 @@
   --badge-critical-background: 0 72% 95%;
   --badge-critical-foreground: 0 72% 34%;
   --map-control-background: 0 0% 100%;
-  --map-control-border: 212 22% 86%;
-  --alert-banner-border: 35 92% 70%;
+  --map-control-border: 220 16% 88%;
+  --alert-banner-border: 35 92% 72%;
 
-  --radius: 0.75rem;
+  --radius: 18px;
+  --shadow-soft: 0 18px 55px hsl(220 30% 18% / 0.08);
+  --shadow-float: 0 28px 90px hsl(220 30% 18% / 0.12);
 }
 
 .dark {

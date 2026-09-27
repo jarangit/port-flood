@@ -86,6 +86,10 @@ function formatUpdatedAt(iso: string) {
   }
 }
 
+function displayAdminName(value: string) {
+  return value.startsWith("ไม่ทราบ") ? "-" : value;
+}
+
 function DetailSection({
   icon: Icon,
   title,
@@ -98,15 +102,15 @@ function DetailSection({
   children: React.ReactNode;
 }) {
   return (
-    <details className="group overflow-hidden rounded-3xl border border-sky-100 bg-white/80 shadow-sm backdrop-blur">
+    <details className="group overflow-hidden rounded-3xl border border-border bg-card/85 shadow-[var(--shadow-soft)] backdrop-blur">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
-        <span className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-500/10">
+        <span className="flex min-w-0 flex-1 items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
             <Icon className="h-4 w-4 text-sky-600" aria-hidden="true" />
           </span>
-          <span className="text-[15px] font-semibold text-slate-900">{title}</span>
+          <span className="min-w-0 break-words text-[15px] font-semibold text-foreground">{title}</span>
           {badge ? (
-            <span className="rounded-full border border-sky-100 bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">
+            <span className="shrink-0 rounded-full border border-border bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
               {badge}
             </span>
           ) : null}
@@ -116,7 +120,7 @@ function DetailSection({
           aria-hidden="true"
         />
       </summary>
-      <div className="border-t border-sky-100/80 px-4 py-4 text-sm leading-7 text-slate-600">
+      <div className="border-t border-border px-4 py-4 text-sm leading-7 text-muted-foreground">
         {children}
       </div>
     </details>
@@ -157,7 +161,7 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
   const RiskIcon = riskMeta[risk.baselineRisk].icon;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-sky-100/80 via-[#f4f9ff] to-white text-slate-900">
+    <main className="relative min-h-screen overflow-x-clip bg-gradient-to-b from-sky-100/80 via-[#f4f9ff] to-white text-slate-900">
       {/* misty sky */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-sky-200/50 blur-[100px]" />
@@ -165,14 +169,16 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
         <div className="absolute left-1/2 top-0 h-64 w-[720px] -translate-x-1/2 rounded-full bg-white/70 blur-[90px]" />
       </div>
 
-      <div className="relative mx-auto w-full max-w-5xl px-4 pb-12 pt-8 sm:px-5 sm:pb-16 sm:pt-10 md:pt-14">
+      <div className="relative mx-auto w-full max-w-5xl min-w-0 px-4 pb-12 pt-8 sm:px-5 sm:pb-16 sm:pt-10 md:pt-14">
         {/* hero */}
         <div className="text-center">
-          <p className="flex items-center justify-center gap-1.5 break-words text-sm font-medium text-slate-700 sm:text-[15px]">
+          <p className="mx-auto flex max-w-full items-center justify-center gap-1.5 break-words text-sm font-medium text-slate-700 sm:text-[15px]">
             <MapPin className="h-4 w-4 shrink-0 text-sky-500" aria-hidden="true" />
-            {risk.location.subdistrict} · {risk.location.district}
+            <span className="min-w-0 break-words">
+              {displayAdminName(risk.location.subdistrict)} · {displayAdminName(risk.location.district)}
+            </span>
           </p>
-          <p className="mt-1 text-[13px] text-slate-500 sm:text-sm">{risk.location.province}</p>
+          <p className="mt-1 text-[13px] text-slate-500 sm:text-sm">{displayAdminName(risk.location.province)}</p>
 
           <div className="mt-4 flex items-center justify-center gap-3 sm:mt-5">
             <span
@@ -181,7 +187,7 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
               <StatusIcon className="h-7 w-7 sm:h-9 sm:w-9" aria-hidden="true" />
             </span>
           </div>
-          <h1 className="mt-2 text-[42px] font-semibold leading-none tracking-tight text-slate-900 sm:mt-3 sm:text-6xl md:text-7xl">
+          <h1 className="mt-2 break-words text-[40px] font-semibold leading-none tracking-tight text-slate-900 sm:mt-3 sm:text-6xl md:text-7xl">
             {currentStatusLabels[status]}
           </h1>
           <p className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[15px]">
@@ -196,7 +202,7 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
         </div>
 
         {/* human visual — hero of this version */}
-        <div className="mt-6 overflow-hidden rounded-2xl border border-sky-100 bg-white/70 shadow-[0_20px_60px_rgba(14,116,144,0.10)] backdrop-blur sm:mt-8 sm:rounded-[28px]">
+        <div className="mt-6 min-w-0 overflow-hidden rounded-2xl border border-border bg-card/80 shadow-[var(--shadow-float)] backdrop-blur sm:mt-8 sm:rounded-[28px]">
           <div className="flex items-center gap-2 border-b border-sky-100/80 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-600 sm:px-5 sm:py-3 sm:text-[12px]">
             <PersonStanding className="h-4 w-4" aria-hidden="true" />
             <span>ภาพระดับน้ำเทียบตัวคน</span>
@@ -225,15 +231,15 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
         />
 
         {/* hidden details */}
-        <div className="mx-auto mt-6 grid max-w-3xl gap-3">
+        <div className="mx-auto mt-6 grid max-w-3xl min-w-0 gap-3">
           <DetailSection icon={BellRing} title="ประกาศทางการ" badge={`${risk.alerts.length}`}>
             {risk.alerts.length === 0 ? (
               <p>ตอนนี้ไม่มีประกาศในระบบ</p>
             ) : (
               <ul className="space-y-3">
                 {risk.alerts.slice(0, 4).map((alert) => (
-                  <li key={alert.id} className="rounded-2xl border border-sky-100 bg-white p-3">
-                    <p className="font-semibold text-slate-900">{alert.title}</p>
+                  <li key={alert.id} className="rounded-2xl border border-border bg-card p-3">
+                    <p className="break-words font-semibold text-foreground">{alert.title}</p>
                     <a
                       href={alert.url}
                       target="_blank"
@@ -281,8 +287,8 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
             ) : (
               <ul className="space-y-2">
                 {realtime.stations.slice(0, 5).map((station) => (
-                  <li key={station.id} className="rounded-2xl border border-sky-100 bg-white p-3">
-                    <p className="font-semibold text-slate-900">{station.name}</p>
+                  <li key={station.id} className="rounded-2xl border border-border bg-card p-3">
+                    <p className="break-words font-semibold text-foreground">{station.name}</p>
                     <p className="text-slate-500">
                       {station.bankDiffM !== undefined
                         ? `${station.bankDiffM >= 0 ? "เหนือ" : "ใต้"}ตลิ่ง ${Math.abs(station.bankDiffM)} ม.`
@@ -292,8 +298,8 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
                   </li>
                 ))}
                 {realtime.rainfall.slice(0, 5).map((station) => (
-                  <li key={station.id} className="rounded-2xl border border-sky-100 bg-white p-3">
-                    <p className="font-semibold text-slate-900">{station.name}</p>
+                  <li key={station.id} className="rounded-2xl border border-border bg-card p-3">
+                    <p className="break-words font-semibold text-foreground">{station.name}</p>
                     <p className="text-slate-500">
                       ฝน {station.rain24h ?? "-"} มม./24 ชม. · {station.distanceKm} กม.
                     </p>

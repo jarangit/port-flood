@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Flood Safety UI is the design system for Flood Check Thailand. It provides a calm, trustworthy, Thai-first public-safety interface built on `shadcn/ui`, Tailwind CSS design tokens, and Atomic Design component composition.
+Flood Safety UI is the design system for ท่วมไทย. It provides a calm, trustworthy, Thai-first public-safety interface built on `shadcn/ui`, Tailwind CSS design tokens, and Atomic Design component composition.
 
 The design should feel clear and reliable, not decorative. It should help people understand risk and act without panic.
 

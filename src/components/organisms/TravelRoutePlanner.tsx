@@ -264,11 +264,11 @@ function splitRouteLabel(label: string) {
 function LoadingAnalysisCard() {
   return (
     <section className="rounded-[28px] border border-sky-100 bg-white/85 p-4 shadow-sm backdrop-blur sm:p-6">
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500 text-white">
           <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
         </span>
-        <div>
+        <div className="min-w-0">
           <p className="font-semibold text-slate-950">กำลังวิเคราะห์เส้นทาง</p>
           <p className="text-sm text-slate-500">อาจใช้เวลาสักครู่ เพราะต้องตรวจหลายจุดตามเส้นทาง</p>
         </div>
@@ -374,7 +374,7 @@ function RouteScrubber({ result }: { result: RouteRiskResponse }) {
 
   return (
     <div className="mt-6">
-      <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-500">
+      <div className="flex min-w-0 items-center justify-between gap-3 text-xs font-medium text-slate-500">
         <span className="line-clamp-1 max-w-[42%]">{result.origin.label}</span>
         <span className="line-clamp-1 max-w-[42%] text-right">{result.destination.label}</span>
       </div>
@@ -447,15 +447,15 @@ function RouteScrubber({ result }: { result: RouteRiskResponse }) {
         <span>{result.distanceKm} กม.</span>
       </div>
 
-      <div className="mt-3 rounded-2xl border border-sky-100 bg-white/70 p-3">
-        <div className="flex items-center gap-2">
+      <div className="mt-3 min-w-0 rounded-2xl border border-sky-100 bg-white/70 p-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="rounded-full bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white">
             กม. {segment.startKm} - {segment.endKm}
           </span>
-          <span className="truncate text-sm font-semibold text-slate-900">
+          <span className="min-w-0 truncate text-sm font-semibold text-slate-900">
             {riskLevelLabels[segment.risk]}
           </span>
-          <VehicleIcon mode={result.mode} risk={segment.risk} className="ml-auto w-20" />
+          <VehicleIcon mode={result.mode} risk={segment.risk} className="ml-auto w-20 max-[359px]:ml-0" />
         </div>
         <p className="mt-2 text-[13px] font-semibold tabular-nums text-slate-900">กม. {scrubKm}</p>
         <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[13px] text-slate-500">
@@ -471,14 +471,14 @@ function RouteTimeline({ result }: { result: RouteRiskResponse }) {
   const riskySegments = result.segments.filter(riskyEnough);
 
   return (
-    <section className="rounded-[28px] border border-sky-100 bg-white/85 p-4 shadow-[0_20px_60px_rgba(14,116,144,0.10)] backdrop-blur sm:p-6">
+    <section className="min-w-0 rounded-[28px] border border-border bg-card/85 p-4 shadow-[var(--shadow-float)] backdrop-blur sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-sky-600">
             <Route className="h-4 w-4" aria-hidden="true" />
             Timeline เส้นทาง
           </p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+          <h2 className="mt-2 break-words text-2xl font-semibold tracking-tight text-slate-950">
             {result.distanceKm} กม. · ประมาณ {result.durationMin} นาที
           </h2>
           <p className="mt-1 text-sm text-slate-500">
@@ -489,7 +489,7 @@ function RouteTimeline({ result }: { result: RouteRiskResponse }) {
 
       <RouteScrubber result={result} />
 
-      <div className="mt-5 overflow-hidden rounded-2xl border border-sky-100 bg-white/70">
+      <div className="mt-5 min-w-0 overflow-hidden rounded-2xl border border-border bg-card/80">
         <div className="flex items-center gap-2 border-b border-sky-100/80 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-600">
           <MapPin className="h-4 w-4" aria-hidden="true" />
           <span>แผนที่เส้นทางจริง</span>
@@ -506,9 +506,9 @@ function RouteTimeline({ result }: { result: RouteRiskResponse }) {
 
       <div className="mt-5 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
         {Object.entries(riskLevelLabels).map(([risk, label]) => (
-          <div key={risk} className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2 text-slate-600">
+          <div key={risk} className="flex min-w-0 items-center gap-2 rounded-full bg-slate-50 px-3 py-2 text-slate-600">
             <span className={`h-2.5 w-2.5 rounded-full ${riskTone[risk as RiskLevel]}`} />
-            {label}
+            <span className="min-w-0 truncate">{label}</span>
           </div>
         ))}
       </div>
@@ -531,7 +531,7 @@ function RouteTimeline({ result }: { result: RouteRiskResponse }) {
                   <MapPin className="h-4 w-4" aria-hidden="true" />
                 </span>
               </div>
-              <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4 text-sky-900 shadow-sm">
+              <div className="min-w-0 rounded-2xl border border-sky-100 bg-sky-50 p-4 text-sky-900 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-600">จุดเริ่มต้น</p>
                 <p className="mt-1 line-clamp-2 text-sm font-semibold leading-6">{result.origin.label}</p>
                 <p className="mt-1 text-xs text-sky-700">กม. 0</p>
@@ -554,19 +554,19 @@ function RouteTimeline({ result }: { result: RouteRiskResponse }) {
                     </span>
                   </div>
 
-                  <article className={`rounded-2xl border p-3 shadow-sm ${riskCardTone[segment.risk]}`}>
-                    <div className="flex min-w-0 items-center gap-2">
+                  <article className={`min-w-0 rounded-2xl border p-3 shadow-sm ${riskCardTone[segment.risk]}`}>
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
                       <span className="shrink-0 rounded-full bg-white/70 px-2.5 py-1 text-xs font-semibold">
                         กม. {segment.startKm} - {segment.endKm}
                       </span>
-                      <span className="shrink-0 text-sm font-semibold">{segment.label}</span>
-                      <span className="flex min-w-0 flex-1 items-center gap-1 text-[13px] font-medium opacity-80">
+                      <span className="max-w-full break-words text-sm font-semibold sm:shrink-0">{segment.label}</span>
+                      <span className="flex min-w-[11rem] flex-1 items-center gap-1 text-[13px] font-medium opacity-80 max-[430px]:basis-full">
                         <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden="true" />
                         <span className="truncate">
                           {start.place} → {end.place}
                         </span>
                       </span>
-                      <VehicleIcon mode={result.mode} risk={segment.risk} className="ml-auto w-14 sm:w-16" />
+                      <VehicleIcon mode={result.mode} risk={segment.risk} className="ml-auto w-14 max-[430px]:ml-0 sm:w-16" />
                     </div>
                   </article>
                 </div>
@@ -579,7 +579,7 @@ function RouteTimeline({ result }: { result: RouteRiskResponse }) {
                   <Flag className="h-4 w-4" aria-hidden="true" />
                 </span>
               </div>
-              <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-cyan-900 shadow-sm">
+              <div className="min-w-0 rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-cyan-900 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-600">จุดปลายทาง</p>
                 <p className="mt-1 line-clamp-2 text-sm font-semibold leading-6">{result.destination.label}</p>
                 <p className="mt-1 text-xs text-cyan-700">กม. {result.distanceKm}</p>
@@ -676,7 +676,7 @@ export function TravelRoutePlanner() {
 
   return (
     <div className="grid gap-6">
-      <form className="rounded-[28px] border border-sky-100 bg-white/85 p-4 shadow-sm backdrop-blur sm:p-6" onSubmit={handleSubmit}>
+      <form className="min-w-0 rounded-[28px] border border-border bg-card/85 p-4 shadow-[var(--shadow-soft)] backdrop-blur sm:p-6" onSubmit={handleSubmit}>
         <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
           <LocationSuggestField
             id="origin"

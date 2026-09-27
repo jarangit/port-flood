@@ -26,13 +26,13 @@ type CheckMiniMapSectionProps = {
 
 export function CheckMiniMapSection({ lat, lng, risk, caption }: CheckMiniMapSectionProps) {
   return (
-    <div className="mt-4 overflow-hidden rounded-2xl border border-sky-100 bg-white/70 shadow-[0_20px_60px_rgba(14,116,144,0.10)] backdrop-blur sm:mt-6 sm:rounded-[28px]">
+    <div className="mt-4 min-w-0 overflow-hidden rounded-2xl border border-border bg-card/80 shadow-[var(--shadow-soft)] backdrop-blur sm:mt-6 sm:rounded-[28px]">
       <div className="flex items-center gap-2 border-b border-sky-100/80 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-600 sm:px-5 sm:py-3 sm:text-[12px]">
         <MapPin className="h-4 w-4" aria-hidden="true" />
         <span>แผนที่จุดตรวจ</span>
       </div>
       <MiniLocationMap lat={lat} lng={lng} risk={risk} />
-      <p className="border-t border-sky-100/80 px-4 py-2.5 text-xs text-slate-500 sm:px-5">{caption}</p>
+      <p className="break-words border-t border-border px-4 py-2.5 text-xs text-muted-foreground sm:px-5">{caption}</p>
     </div>
   );
 }
