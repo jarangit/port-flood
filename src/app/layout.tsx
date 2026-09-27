@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { CookieConsentCard } from "@/components/molecules/CookieConsentCard";
 import { SiteFooter } from "@/components/organisms/SiteFooter";
 import { SiteHeader } from "@/components/organisms/SiteHeader";
 import "@/styles/globals.css";
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </div>
         {children}
         <SiteFooter />
+        <CookieConsentCard />
       </body>
     </html>
   );
