@@ -12,6 +12,7 @@ import {
   Loader2,
   MapPin,
   Navigation,
+  RadioTower,
   Route,
   ShieldCheck,
 } from "lucide-react";
@@ -85,6 +86,7 @@ type RouteRiskResponse = {
   source: "openrouteservice";
   disclaimer: string;
   coordinates: [number, number][];
+  mapSegments?: RouteRiskSegment[];
   segments: RouteRiskSegment[];
 };
 
@@ -267,6 +269,13 @@ function splitRouteLabel(label: string) {
     km: kmPart.replace("กม.", "").trim(),
     place: placeParts.join(" · ") || label,
   };
+}
+
+function stationConfidenceLine(segment: RouteRiskSegment) {
+  const km = segment.roadWaterEstimate.stationDistanceKm;
+  if (km === null) return "ไม่มีสถานีตรวจวัดใกล้เส้นทาง · เป็นค่าประมาณเบื้องต้น";
+  if (km > 10) return `ประเมินจากสถานีห่าง ~${Math.round(km)} กม. · ความเชื่อมั่นต่ำ`;
+  return `อ้างอิงสถานีใกล้สุด ~${km} กม.`;
 }
 
 function LoadingAnalysisCard() {
@@ -572,6 +581,10 @@ function RouteTimeline({ result }: { result: RouteRiskResponse }) {
                           : `${segment.vehicleWater.label} · ${segment.vehicleWater.impactLabel}`}
                       </span>
                     </p>
+                    <p className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] leading-5 text-slate-400">
+                      <RadioTower className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="truncate">{stationConfidenceLine(segment)}</span>
+                    </p>
                   </article>
                 </div>
               );
@@ -683,7 +696,7 @@ export function TravelRoutePlanner() {
       <div className="absolute inset-0 z-0">
         <TravelMapCanvas
           coordinates={result?.coordinates ?? []}
-          segments={result?.segments ?? []}
+          segments={result?.mapSegments ?? result?.segments ?? []}
           distanceKm={result?.distanceKm ?? 0}
         />
       </div>

@@ -14,11 +14,17 @@ function interpolate(from: [number, number], to: [number, number], ratio: number
   return [from[0] + (to[0] - from[0]) * ratio, from[1] + (to[1] - from[1]) * ratio];
 }
 
+function targetSampleIntervalKm(distanceKm: number) {
+  if (distanceKm <= 10) return 0.5;
+  if (distanceKm <= 50) return 1;
+  return 2;
+}
+
 export function sampleRoute({
   coordinates,
   distanceKm,
   durationMin,
-  maxSamples = 12,
+  maxSamples = 60,
 }: {
   coordinates: [number, number][];
   distanceKm: number;
@@ -27,7 +33,7 @@ export function sampleRoute({
 }): RouteSamplePoint[] {
   if (coordinates.length === 0) return [];
 
-  const targetCount = Math.max(2, Math.min(maxSamples, Math.ceil(distanceKm / (distanceKm <= 20 ? 2 : 8)) + 1));
+  const targetCount = Math.max(2, Math.min(maxSamples, Math.ceil(distanceKm / targetSampleIntervalKm(distanceKm)) + 1));
   const targetDistances = Array.from({ length: targetCount }, (_, index) =>
     (distanceKm * index) / (targetCount - 1),
   );

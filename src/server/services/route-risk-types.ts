@@ -61,5 +61,8 @@ export type RouteRiskResponse = {
   disclaimer: string;
   /** Full route geometry as [lng, lat] pairs from OpenRouteService, for mini map display. */
   coordinates: [number, number][];
+  /** Finer, unmerged per-sample segments for coloring the map polyline. */
+  mapSegments: RouteRiskSegment[];
+  /** Human-readable merged segments for timeline and summary UI. */
   segments: RouteRiskSegment[];
 };

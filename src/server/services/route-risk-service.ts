@@ -2,10 +2,11 @@ import { currentStatusLabels, type CurrentStatus } from "@/config/status-levels"
 import { riskLevelLabels, type RiskLevel } from "@/config/risk-levels";
 import { isCoordinateInThailand } from "@/lib/validation";
 import { fetchDirections } from "@/server/external/openrouteservice/client";
+import { fetchRainfall24h, fetchWaterLevels } from "@/server/external/thaiwater/client";
 import { getOfficialAlerts } from "@/server/services/alert-service";
 import { getFloodRisk } from "@/server/services/flood-risk-service";
 import { reverseGeocodeThailand } from "@/server/services/geocoding-service";
-import { getRealtimeNearby } from "@/server/services/realtime-service";
+import { summarizeRealtimeNearby } from "@/server/services/realtime-service";
 import { sampleRoute } from "@/server/services/route-sampling-service";
 import type {
   RouteRiskRequest,
@@ -16,7 +17,33 @@ import type {
 } from "@/server/services/route-risk-types";
 
 const MAX_DISTANCE_KM = Number(process.env.ROUTE_RISK_MAX_DISTANCE_KM ?? 100);
-const MAX_SAMPLE_POINTS = Number(process.env.ROUTE_RISK_MAX_SAMPLE_POINTS ?? 12);
+const MAX_SAMPLE_POINTS = Number(process.env.ROUTE_RISK_MAX_SAMPLE_POINTS ?? 60);
+// Bounded parallelism: Overpass asks for effectively serial use and Nominatim
+// allows ~1 req/s, so never fan out to all samples at once.
+const SAMPLE_CONCURRENCY = Number(process.env.ROUTE_RISK_SAMPLE_CONCURRENCY ?? 6);
+const LABEL_CONCURRENCY = Number(process.env.ROUTE_RISK_LABEL_CONCURRENCY ?? 3);
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+  const workers = Math.max(1, Math.min(limit, items.length));
+
+  await Promise.all(
+    Array.from({ length: workers }, async () => {
+      while (cursor < items.length) {
+        const index = cursor;
+        cursor += 1;
+        results[index] = await fn(items[index], index);
+      }
+    }),
+  );
+
+  return results;
+}
 
 const riskRank: Record<RiskLevel, number> = { low: 0, medium: 1, high: 2, very_high: 3 };
 const statusRank: Record<CurrentStatus, number> = { normal: 0, watch: 1, warning: 2, critical: 3 };
@@ -184,42 +211,96 @@ async function getSampleLabel(point: RouteSamplePoint) {
   }
 }
 
-function mergeSegments(points: RouteSamplePoint[], items: SegmentAssessment[]) {
-  const segments: RouteRiskSegment[] = [];
+type MergedSegment = {
+  segment: RouteRiskSegment;
+  startIndex: number;
+  endIndex: number;
+};
+
+function mergeRawSegments(points: RouteSamplePoint[], items: SegmentAssessment[]) {
+  const merged: MergedSegment[] = [];
 
   for (let index = 0; index < items.length; index += 1) {
     const point = points[index];
     const nextPoint = points[index + 1] ?? point;
     const item = items[index];
-    const last = segments.at(-1);
+    const last = merged.at(-1);
 
-    if (last && last.risk === item.risk && last.status === item.status) {
-      last.endKm = nextPoint.distanceKm;
-      last.endTimeMin = nextPoint.timeMin;
-      last.endLabel = items[index + 1]?.pointLabel ?? item.pointLabel;
-      last.reasons = Array.from(new Set([...last.reasons, ...item.reasons])).slice(0, 4);
-      last.vehicleWater = strongestVehicleWater(last.vehicleWater, item.vehicleWater);
-      last.roadWaterEstimate = lowestRoadClearance(last.roadWaterEstimate, item.roadWaterEstimate);
+    if (last && last.segment.risk === item.risk && last.segment.status === item.status) {
+      last.segment.endKm = nextPoint.distanceKm;
+      last.segment.endTimeMin = nextPoint.timeMin;
+      last.endIndex = index;
+      last.segment.reasons = Array.from(
+        new Set([...last.segment.reasons, ...item.reasons]),
+      ).slice(0, 4);
+      last.segment.vehicleWater = strongestVehicleWater(last.segment.vehicleWater, item.vehicleWater);
+      last.segment.roadWaterEstimate = lowestRoadClearance(
+        last.segment.roadWaterEstimate,
+        item.roadWaterEstimate,
+      );
       continue;
     }
 
-    segments.push({
-      startKm: point.distanceKm,
-      endKm: nextPoint.distanceKm,
-      startTimeMin: point.timeMin,
-      endTimeMin: nextPoint.timeMin,
-      startLabel: item.pointLabel,
-      endLabel: items[index + 1]?.pointLabel ?? item.pointLabel,
-      risk: item.risk,
-      status: item.status,
-      label: item.label,
-      reasons: item.reasons,
-      vehicleWater: item.vehicleWater,
-      roadWaterEstimate: item.roadWaterEstimate,
+    merged.push({
+      segment: {
+        startKm: point.distanceKm,
+        endKm: nextPoint.distanceKm,
+        startTimeMin: point.timeMin,
+        endTimeMin: nextPoint.timeMin,
+        startLabel: "",
+        endLabel: "",
+        risk: item.risk,
+        status: item.status,
+        label: item.label,
+        reasons: item.reasons,
+        vehicleWater: item.vehicleWater,
+        roadWaterEstimate: item.roadWaterEstimate,
+      },
+      startIndex: index,
+      endIndex: index,
     });
   }
 
-  return segments.filter((segment) => segment.endKm > segment.startKm);
+  return merged.filter((entry) => entry.segment.endKm > entry.segment.startKm);
+}
+
+async function labelMergedSegments(points: RouteSamplePoint[], merged: MergedSegment[]) {
+  await mapWithConcurrency(merged, LABEL_CONCURRENCY, async (entry) => {
+    const endSample = points[entry.endIndex + 1] ?? points[entry.endIndex];
+    const [startLabel, endLabel] = await Promise.all([
+      getSampleLabel(points[entry.startIndex]),
+      getSampleLabel(endSample),
+    ]);
+    entry.segment.startLabel = startLabel;
+    entry.segment.endLabel = endLabel;
+  });
+
+  return merged.map((entry) => entry.segment);
+}
+
+function buildMapSegments(points: RouteSamplePoint[], items: SegmentAssessment[]) {
+  return items
+    .map<RouteRiskSegment>((item, index) => {
+      const point = points[index];
+      const nextPoint = points[index + 1] ?? point;
+
+      return {
+        startKm: point.distanceKm,
+        endKm: nextPoint.distanceKm,
+        startTimeMin: point.timeMin,
+        endTimeMin: nextPoint.timeMin,
+        // Map-only segments never hit reverse-geocode; labels stay as km markers.
+        startLabel: sampleFallbackLabel(point),
+        endLabel: sampleFallbackLabel(nextPoint),
+        risk: item.risk,
+        status: item.status,
+        label: item.label,
+        reasons: item.reasons,
+        vehicleWater: item.vehicleWater,
+        roadWaterEstimate: item.roadWaterEstimate,
+      };
+    })
+    .filter((segment) => segment.endKm > segment.startKm);
 }
 
 export async function getRouteRisk(request: RouteRiskRequest): Promise<RouteRiskResponse> {
@@ -244,54 +325,54 @@ export async function getRouteRisk(request: RouteRiskRequest): Promise<RouteRisk
     maxSamples: MAX_SAMPLE_POINTS,
   });
   const officialAlerts = await getOfficialAlerts();
+  // ThaiWater publishes national snapshots; fetch once and map nearby per sample.
+  const [waterLevels, rainfallRows] = await Promise.all([fetchWaterLevels(), fetchRainfall24h()]);
 
-  const assessments = await Promise.all(
-    samples.map(async (sample) => {
-      const [pointLabel, realtime] = await Promise.all([
-        getSampleLabel(sample),
-        getRealtimeNearby(sample.lat, sample.lng),
-      ]);
-      const risk = await getFloodRisk(
-        sample.lat,
-        sample.lng,
-        {
-          lat: sample.lat,
-          lng: sample.lng,
-          province: "ระหว่างเส้นทาง",
-          district: `กม. ${sample.distanceKm}`,
-          subdistrict: "จุดตรวจเส้นทาง",
-          basin: "ยังไม่มีข้อมูลลุ่มน้ำ",
-        },
-        officialAlerts,
-        {
-          stations: realtime.stations,
-          rainfall: realtime.rainfall,
-          summaryStatus: realtime.summaryStatus,
-        },
-      );
+  const assessments = await mapWithConcurrency(samples, SAMPLE_CONCURRENCY, async (sample) => {
+    const realtime = summarizeRealtimeNearby(waterLevels, rainfallRows, sample.lat, sample.lng);
+    const risk = await getFloodRisk(
+      sample.lat,
+      sample.lng,
+      {
+        lat: sample.lat,
+        lng: sample.lng,
+        province: "ระหว่างเส้นทาง",
+        district: `กม. ${sample.distanceKm}`,
+        subdistrict: "จุดตรวจเส้นทาง",
+        basin: "ยังไม่มีข้อมูลลุ่มน้ำ",
+      },
+      officialAlerts,
+      {
+        stations: realtime.stations,
+        rainfall: realtime.rainfall,
+        summaryStatus: realtime.summaryStatus,
+      },
+    );
 
-      const stationDistanceKm = realtime.stations[0]?.distanceKm ?? null;
+    const stationDistanceKm = realtime.stations[0]?.distanceKm ?? null;
 
-      return {
-        pointLabel,
-        risk: risk.baselineRisk,
-        status: realtime.summaryStatus,
-        label: segmentLabel(risk.baselineRisk, realtime.summaryStatus),
-        reasons: importantReasons(risk.factors),
-        vehicleWater: {
-          depthCm: risk.displayDepthCm ?? null,
-          label: risk.displayLabel ?? "ไม่มีข้อมูล",
-          source: risk.displaySource ?? "unknown",
-          impactLabel: vehicleImpactLabel(request.mode, risk.displayDepthCm ?? null, risk.displayLabel ?? ""),
-        },
-        roadWaterEstimate: buildRoadWaterEstimate({
-          roadElevationM: risk.userElevationM ?? null,
-          nearestWaterLevelMsl: risk.stationWaterLevelMsl ?? null,
-          stationDistanceKm,
-        }),
-      };
-    }),
-  );
+    return {
+      pointLabel: "",
+      risk: risk.baselineRisk,
+      status: realtime.summaryStatus,
+      label: segmentLabel(risk.baselineRisk, realtime.summaryStatus),
+      reasons: importantReasons(risk.factors),
+      vehicleWater: {
+        depthCm: risk.displayDepthCm ?? null,
+        label: risk.displayLabel ?? "ไม่มีข้อมูล",
+        source: risk.displaySource ?? "unknown",
+        impactLabel: vehicleImpactLabel(request.mode, risk.displayDepthCm ?? null, risk.displayLabel ?? ""),
+      },
+      roadWaterEstimate: buildRoadWaterEstimate({
+        roadElevationM: risk.userElevationM ?? null,
+        nearestWaterLevelMsl: risk.stationWaterLevelMsl ?? null,
+        stationDistanceKm,
+      }),
+    };
+  });
+
+  // Reverse-geocode only merged timeline boundaries instead of every sample.
+  const segments = await labelMergedSegments(samples, mergeRawSegments(samples, assessments));
 
   return {
     origin: request.origin,
@@ -302,10 +383,11 @@ export async function getRouteRisk(request: RouteRiskRequest): Promise<RouteRisk
     sampleCount: samples.length,
     source: "openrouteservice",
     coordinates: route.coordinates,
+    mapSegments: buildMapSegments(samples, assessments),
     disclaimer:
       request.mode === "motorcycle"
         ? "เส้นทางมอไซค์ใช้ข้อมูลเส้นทางรถยนต์เป็นค่าประมาณ ถนนจริงและข้อจำกัดมอไซค์อาจต่างกัน ผลนี้ใช้เพื่อวางแผน ไม่ใช่คำสั่งปิดถนนหรือคำสั่งอพยพ"
         : "ผลนี้ใช้เพื่อวางแผนก่อนเดินทาง ไม่ใช่คำสั่งปิดถนนหรือคำสั่งอพยพ โปรดตรวจประกาศรัฐและสภาพถนนจริงเสมอ",
-    segments: mergeSegments(samples, assessments),
+    segments,
   };
 }
