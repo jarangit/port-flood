@@ -1,25 +1,26 @@
 "use client";
 
-import { useMemo } from "react";
-import { MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet";
+import { useEffect, useMemo } from "react";
+import { MapContainer, Marker, Polyline, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 
 import type { RiskLevel } from "@/config/risk-levels";
 import { RISK_HEX, dotPin } from "@/components/molecules/map-pins";
 import { MAP_TILES } from "@/components/molecules/map-themes";
 
-export type RouteMapSegment = {
+export type TravelMapSegment = {
   startKm: number;
   endKm: number;
   risk: RiskLevel;
 };
 
-type MiniRouteMapProps = {
-  /** Route geometry as [lng, lat] pairs from OpenRouteService. */
-  coordinates: [number, number][];
-  segments: RouteMapSegment[];
-  distanceKm: number;
+type TravelMapCanvasProps = {
+  coordinates?: [number, number][];
+  segments?: TravelMapSegment[];
+  distanceKm?: number;
 };
+
+const THAILAND_CENTER: [number, number] = [15.87, 100.9925];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -30,15 +31,22 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   return 2 * 6371 * Math.asin(Math.sqrt(a));
 }
 
-function FitBounds({ positions }: { positions: [number, number][] }) {
+function FitRouteBounds({ positions }: { positions: [number, number][] }) {
   const map = useMap();
   const bounds = useMemo(() => L.latLngBounds(positions), [positions]);
-  map.fitBounds(bounds, { padding: [24, 24] });
+  // Keep route clear of the floating panel on desktop by padding the left side.
+  useEffect(() => {
+    const isDesktop = typeof window !== "undefined" && window.innerWidth >= 1024;
+    map.fitBounds(bounds, {
+      padding: [40, 40],
+      paddingTopLeft: isDesktop ? L.point(440, 40) : undefined,
+    });
+  }, [map, bounds]);
   return null;
 }
 
-/** Read-only mini map of the real route, colored by flood-risk segment. Loaded with ssr:false. */
-export function MiniRouteMap({ coordinates, segments, distanceKm }: MiniRouteMapProps) {
+/** Fullscreen Apple-Maps-style canvas. Shows Thailand overview until a route result arrives. */
+export function TravelMapCanvas({ coordinates = [], segments = [], distanceKm = 0 }: TravelMapCanvasProps) {
   const positions = useMemo<[number, number][]>(
     () => coordinates.map(([lng, lat]) => [lat, lng]),
     [coordinates],
@@ -54,7 +62,6 @@ export function MiniRouteMap({ coordinates, segments, distanceKm }: MiniRouteMap
       cumulative.push(cumulative[index - 1] + haversineKm(prevLat, prevLng, lat, lng));
     }
     const totalHav = cumulative[cumulative.length - 1] || 1;
-    // ORS summary distance can differ slightly from haversine sum, so scale km boundaries.
     const scale = totalHav / distanceKm;
 
     return segments.flatMap((segment, segmentIndex) => {
@@ -73,28 +80,47 @@ export function MiniRouteMap({ coordinates, segments, distanceKm }: MiniRouteMap
     });
   }, [positions, segments, distanceKm]);
 
-  if (positions.length === 0) return null;
+  const hasRoute = positions.length >= 2;
+  const boundsKey = hasRoute
+    ? `${positions[0][0].toFixed(4)},${positions[0][1].toFixed(4)}-${positions[positions.length - 1][0].toFixed(4)},${positions[positions.length - 1][1].toFixed(4)}`
+    : "thailand-overview";
+
+  if (!hasRoute) {
+    return (
+      <MapContainer
+        key={boundsKey}
+        center={THAILAND_CENTER}
+        zoom={6}
+        scrollWheelZoom
+        zoomControl={false}
+        className="z-0 h-full w-full"
+      >
+        <TileLayer attribution={MAP_TILES.attribution} url={MAP_TILES.url} />
+        <ZoomControl position="bottomright" />
+      </MapContainer>
+    );
+  }
 
   const start = positions[0];
   const end = positions[positions.length - 1];
-  const boundsKey = `${start[0].toFixed(4)},${start[1].toFixed(4)}-${end[0].toFixed(4)},${end[1].toFixed(4)}`;
 
   return (
     <MapContainer
       key={boundsKey}
       bounds={L.latLngBounds(positions)}
-      scrollWheelZoom={false}
-      className="z-0 h-[220px] w-full sm:h-[280px]"
+      scrollWheelZoom
+      zoomControl={false}
+      className="z-0 h-full w-full"
     >
       <TileLayer attribution={MAP_TILES.attribution} url={MAP_TILES.url} />
-      <FitBounds positions={positions} />
-      {/* white casing under the colored runs for contrast on the base map */}
-      <Polyline positions={positions} pathOptions={{ color: "#ffffff", weight: 7, opacity: 0.9 }} />
+      <ZoomControl position="bottomright" />
+      <FitRouteBounds positions={positions} />
+      <Polyline positions={positions} pathOptions={{ color: "#ffffff", weight: 8, opacity: 0.95 }} />
       {coloredRuns.map(({ key, run, risk }) => (
         <Polyline
           key={key}
           positions={run}
-          pathOptions={{ color: RISK_HEX[risk], weight: 4, opacity: 0.95 }}
+          pathOptions={{ color: RISK_HEX[risk], weight: 5, opacity: 0.95 }}
         />
       ))}
       <Marker position={start} icon={dotPin("#0284c7")} />

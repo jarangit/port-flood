@@ -5,6 +5,7 @@ import { Circle, MapContainer, Marker, TileLayer } from "react-leaflet";
 
 import type { RiskLevel } from "@/config/risk-levels";
 import { RISK_HEX, dotPin } from "@/components/molecules/map-pins";
+import { MAP_TILES } from "@/components/molecules/map-themes";
 
 type MiniLocationMapProps = {
   lat: number;
@@ -24,10 +25,7 @@ export function MiniLocationMap({ lat, lng, risk }: MiniLocationMapProps) {
       scrollWheelZoom={false}
       className="z-0 h-[220px] w-full sm:h-[260px]"
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <TileLayer attribution={MAP_TILES.attribution} url={MAP_TILES.url} />
       <Circle
         center={[lat, lng]}
         radius={1000}

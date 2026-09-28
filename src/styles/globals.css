@@ -36,3 +36,12 @@
     @apply bg-primary text-primary-foreground;
   }
 }
+
+@layer components {
+  /* Mute OSM base-map colors toward an Apple-Maps-like pastel canvas.
+     Only the tile pane is filtered; markers, route polylines and circles
+     live in separate panes and keep full color. */
+  .leaflet-tile-pane {
+    filter: saturate(0.35) brightness(1.05);
+  }
+}

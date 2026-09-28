@@ -1,10 +1,12 @@
 import L from "leaflet";
 
+// Must stay in sync with `riskTone` in TravelRoutePlanner (emerald-400 /
+// yellow-400 / orange-500 / red-700) so map polylines match the progress bar.
 export const RISK_HEX = {
   low: "#34d399",
   medium: "#facc15",
   high: "#f97316",
-  very_high: "#fb7185",
+  very_high: "#b91c1c",
 } as const;
 
 /** Small dot pin rendered as pure HTML so no Leaflet image assets are needed. */
