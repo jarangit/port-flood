@@ -106,7 +106,7 @@ function DetailSection({
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
         <span className="flex min-w-0 flex-1 items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-            <Icon className="h-4 w-4 text-sky-600" aria-hidden="true" />
+            <Icon className="h-4 w-4 text-slate-500" aria-hidden="true" />
           </span>
           <span className="min-w-0 break-words text-[15px] font-semibold text-foreground">{title}</span>
           {badge ? (
@@ -135,9 +135,9 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
 
   if ("error" in reverseResult) {
     return (
-      <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-sky-50 via-white to-cyan-50 text-slate-900">
+      <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-slate-100 via-white to-slate-50 text-slate-900">
         <div className="relative mx-auto w-full max-w-3xl px-5 py-16 text-center">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-sky-500 text-white">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-900 text-white">
             <MapPinOff className="h-7 w-7" aria-hidden="true" />
           </span>
           <h1 className="mt-6 text-4xl font-semibold tracking-tight">อยู่นอกพื้นที่รองรับ</h1>
@@ -161,11 +161,11 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
   const RiskIcon = riskMeta[risk.baselineRisk].icon;
 
   return (
-    <main className="relative min-h-screen overflow-x-clip bg-gradient-to-b from-sky-100/80 via-[#f4f9ff] to-white text-slate-900">
-      {/* misty sky */}
+    <main className="relative min-h-screen overflow-x-clip bg-gradient-to-b from-slate-200/60 via-[#f6f7f9] to-white text-slate-900">
+      {/* misty neutral */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-sky-200/50 blur-[100px]" />
-        <div className="absolute -right-20 top-40 h-80 w-80 rounded-full bg-cyan-200/40 blur-[110px]" />
+        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-slate-300/50 blur-[100px]" />
+        <div className="absolute -right-20 top-40 h-80 w-80 rounded-full bg-slate-200/50 blur-[110px]" />
         <div className="absolute left-1/2 top-0 h-64 w-[720px] -translate-x-1/2 rounded-full bg-white/70 blur-[90px]" />
       </div>
 
@@ -173,7 +173,7 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
         {/* hero */}
         <div className="text-center">
           <p className="mx-auto flex max-w-full items-center justify-center gap-1.5 break-words text-sm font-medium text-slate-700 sm:text-[15px]">
-            <MapPin className="h-4 w-4 shrink-0 text-sky-500" aria-hidden="true" />
+            <MapPin className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             <span className="min-w-0 break-words">
               {displayAdminName(risk.location.subdistrict)} · {displayAdminName(risk.location.district)}
             </span>
@@ -203,7 +203,7 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
 
         {/* human visual — hero of this version */}
         <div className="mt-6 min-w-0 overflow-hidden rounded-2xl border border-border bg-card/80 shadow-[var(--shadow-float)] backdrop-blur sm:mt-8 sm:rounded-[28px]">
-          <div className="flex items-center gap-2 border-b border-sky-100/80 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-600 sm:px-5 sm:py-3 sm:text-[12px]">
+          <div className="flex items-center gap-2 border-b border-slate-200/80 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:px-5 sm:py-3 sm:text-[12px]">
             <PersonStanding className="h-4 w-4" aria-hidden="true" />
             <span>ภาพระดับน้ำเทียบตัวคน</span>
           </div>
@@ -258,7 +258,7 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
             <ul className="space-y-2">
               {advice.checklist.map((item) => (
                 <li key={item} className="flex gap-2">
-                  <CloudRain className="mt-1.5 h-4 w-4 shrink-0 text-sky-500" aria-hidden="true" />
+                  <CloudRain className="mt-1.5 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -324,7 +324,7 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
 
           {/* safety */}
           <p className="flex items-start justify-center gap-2 text-center text-[13px] leading-6 text-slate-500">
-            <Info className="mt-1 h-4 w-4 shrink-0 text-sky-500" aria-hidden="true" />
+            <Info className="mt-1 h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
             <span>ข้อมูลเพื่อเตรียมพร้อม ไม่ใช่คำสั่งอพยพ · ติดตามประกาศรัฐเสมอ</span>
           </p>
         </div>

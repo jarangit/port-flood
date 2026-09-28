@@ -25,20 +25,12 @@ export function SiteHeader() {
         <Link
           href="/"
           className="flex min-w-0 items-center"
-          aria-label="ท่วมไทย หน้าแรก"
+          aria-label="เราช่วยกัน หน้าแรก"
           onClick={() => setIsOpen(false)}
         >
-          <span
-            className="relative block h-10 w-28 overflow-hidden rounded-2xl border border-primary/15 bg-white/85 shadow-sm ring-1 ring-white/70 sm:h-11 sm:w-32"
-            aria-hidden="true"
-          >
-            <img
-              src="/images/toamThia.png"
-              alt=""
-              className="absolute left-1/2 top-1/2 h-[5.25rem] w-[10.5rem] -translate-x-1/2 -translate-y-1/2 object-contain sm:h-24 sm:w-48"
-            />
+          <span className="truncate text-lg font-bold tracking-tight text-foreground">
+            เราช่วยกัน
           </span>
-          <span className="sr-only">ท่วมไทย</span>
         </Link>
         <nav className="hidden items-center gap-1 md:flex" aria-label="เมนูหลัก">
           {navItems.map((item) => (

@@ -6,7 +6,7 @@ import "@/styles/globals.css";
 import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
-  title: "ท่วมไทย",
+  title: "เราช่วยกัน",
   description: "เช็กความเสี่ยงน้ำท่วมและสถานการณ์น้ำใกล้ตำแหน่งของคุณ",
 };
 

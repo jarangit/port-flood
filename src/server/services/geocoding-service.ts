@@ -246,7 +246,7 @@ export async function geocodeThailand(query: string) {
           result.source === "photon"
             ? "Photon / OpenStreetMap"
             : result.source === "local"
-              ? "ท่วมไทย fallback"
+              ? "เราช่วยกัน fallback"
               : "OpenStreetMap Nominatim",
       };
     })

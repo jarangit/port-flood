@@ -213,7 +213,7 @@ function LocationSuggestField({
         <Input
           id={id}
           autoComplete="off"
-          className={`h-12 rounded-2xl border-sky-100 pl-9 ${suffixAction ? "pr-28" : "pr-9"}`}
+          className={`h-12 rounded-2xl border-slate-200 pl-9 ${suffixAction ? "pr-28" : "pr-9"}`}
           placeholder={placeholder}
           value={value}
           onChange={(event) => {
@@ -231,12 +231,12 @@ function LocationSuggestField({
       </div>
 
       {isOpen && suggestions.length > 0 ? (
-        <div className="absolute z-30 mt-2 max-h-72 w-full overflow-auto rounded-2xl border border-sky-100 bg-white p-2 shadow-xl">
+        <div className="absolute z-30 mt-2 max-h-72 w-full overflow-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
           {suggestions.map((suggestion) => (
             <button
               key={`${suggestion.lat}-${suggestion.lng}-${suggestion.label}`}
               type="button"
-              className="w-full rounded-xl px-3 py-2 text-left hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+              className="w-full rounded-xl px-3 py-2 text-left hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
                 onChange(suggestion.label);
@@ -247,7 +247,7 @@ function LocationSuggestField({
               <span className="block text-sm font-semibold text-slate-900">
                 {primaryPlaceName(suggestion)}
               </span>
-              <span className="line-clamp-1 text-xs leading-5 text-sky-700">
+              <span className="line-clamp-1 text-xs leading-5 text-slate-500">
                 {secondaryPlaceLine(suggestion) || suggestion.label}
               </span>
               <span className="line-clamp-1 text-xs leading-5 text-slate-500">{suggestion.label}</span>
@@ -282,7 +282,7 @@ function LoadingAnalysisCard() {
   return (
     <section>
       <div className="flex min-w-0 items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-500 text-white">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white">
           <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
         </span>
         <div className="min-w-0">
@@ -292,8 +292,8 @@ function LoadingAnalysisCard() {
       </div>
       <div className="mt-4 grid gap-1.5">
         {loadingSteps.map((step, index) => (
-          <div key={step} className="flex items-center gap-2.5 rounded-2xl bg-sky-50/80 px-3 py-2 text-[13px] text-slate-600">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[11px] font-semibold text-sky-700">
+          <div key={step} className="flex items-center gap-2.5 rounded-2xl bg-slate-100 px-3 py-2 text-[13px] text-slate-600">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[11px] font-semibold text-slate-600">
               {index + 1}
             </span>
             {step}
@@ -329,7 +329,7 @@ function VehicleIcon({
 
   return (
     <div
-      className={`shrink-0 overflow-hidden rounded-lg bg-gradient-to-b from-sky-50 to-white ring-1 ring-sky-100 ${className}`}
+      className={`shrink-0 overflow-hidden rounded-lg bg-gradient-to-b from-slate-100 to-white ring-1 ring-slate-200 ${className}`}
     >
       <svg viewBox="0 0 160 110" className="h-14 w-full" role="img" aria-label={`ระดับน้ำเทียบรถ: ${label}`}>
         {hasWater ? (
@@ -397,7 +397,7 @@ function RouteScrubber({ result }: { result: RouteRiskResponse }) {
       </div>
 
       <div
-        className="cursor-ew-resize touch-pan-y px-3.5 py-5 outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-2xl"
+        className="cursor-ew-resize touch-pan-y px-3.5 py-5 outline-none focus-visible:ring-2 focus-visible:ring-slate-900 rounded-2xl"
         role="slider"
         tabIndex={0}
         aria-label="เลื่อนดูระดับน้ำตามเส้นทาง"
@@ -476,7 +476,7 @@ function RouteScrubber({ result }: { result: RouteRiskResponse }) {
         </div>
         <p className="mt-2 text-[13px] font-semibold tabular-nums text-slate-900">กม. {scrubKm}</p>
         <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[13px] text-slate-500">
-          <MapPin className="h-3.5 w-3.5 shrink-0 text-sky-500" aria-hidden="true" />
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden="true" />
           <span className="truncate">{place}</span>
         </p>
       </div>
@@ -491,7 +491,7 @@ function RouteTimeline({ result }: { result: RouteRiskResponse }) {
     <section className="min-w-0">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-600">
+          <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
             <Route className="h-3.5 w-3.5" aria-hidden="true" />
             Timeline เส้นทาง
           </p>
@@ -533,8 +533,8 @@ function RouteTimeline({ result }: { result: RouteRiskResponse }) {
                   <MapPin className="h-4 w-4" aria-hidden="true" />
                 </span>
               </div>
-              <div className="min-w-0 rounded-2xl border border-sky-100 bg-sky-50 p-4 text-sky-900 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-600">จุดเริ่มต้น</p>
+              <div className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-900 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">จุดเริ่มต้น</p>
                 <p className="mt-1 line-clamp-2 text-sm font-semibold leading-6">{result.origin.label}</p>
               </div>
             </div>
@@ -596,10 +596,10 @@ function RouteTimeline({ result }: { result: RouteRiskResponse }) {
                   <Flag className="h-4 w-4" aria-hidden="true" />
                 </span>
               </div>
-              <div className="min-w-0 rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-cyan-900 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-600">จุดปลายทาง</p>
+              <div className="min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-900 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">จุดปลายทาง</p>
                 <p className="mt-1 line-clamp-2 text-sm font-semibold leading-6">{result.destination.label}</p>
-                <p className="mt-1 text-xs text-cyan-700">กม. {result.distanceKm}</p>
+                <p className="mt-1 text-xs text-slate-500">กม. {result.distanceKm}</p>
               </div>
             </div>
           </div>
@@ -613,7 +613,7 @@ function RouteTimeline({ result }: { result: RouteRiskResponse }) {
   );
 }
 
-export function TravelRoutePlanner() {
+export function TravelRoutePlanner({ embedded = false }: { embedded?: boolean }) {
   const [originQuery, setOriginQuery] = useState("");
   const [destinationQuery, setDestinationQuery] = useState("");
   const [selectedOrigin, setSelectedOrigin] = useState<GeocodeResult | null>(null);
@@ -692,7 +692,13 @@ export function TravelRoutePlanner() {
   }
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-slate-100">
+    <div
+      className={
+        embedded
+          ? "relative h-[600px] w-full overflow-hidden rounded-[28px] border border-border bg-slate-100 shadow-[var(--shadow-float)] lg:h-[640px]"
+          : "relative h-dvh w-full overflow-hidden bg-slate-100"
+      }
+    >
       <div className="absolute inset-0 z-0">
         <TravelMapCanvas
           coordinates={result?.coordinates ?? []}
@@ -704,19 +710,22 @@ export function TravelRoutePlanner() {
       {/* Mobile top scrim so the floating home pill stays readable over tiles */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-20 bg-gradient-to-b from-white/70 to-transparent lg:hidden" />
 
-      <a
-        href="/"
-        className="absolute right-3 top-3 z-20 flex items-center gap-1.5 rounded-full border border-white/60 bg-white/85 py-2 pl-3 pr-4 text-xs font-semibold text-slate-700 shadow-lg backdrop-blur-xl transition hover:bg-white lg:right-4 lg:top-4"
-        aria-label="กลับหน้าแรก"
-      >
-        <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-slate-200">
-          <img src="/images/toamThia.png" alt="" className="h-8 w-8 object-contain" />
-        </span>
-        ท่วมไทย
-      </a>
+      {embedded ? null : (
+        <a
+          href="/"
+          className="absolute right-3 top-3 z-20 flex items-center rounded-full border border-white/60 bg-white/85 px-4 py-2 text-xs font-bold tracking-tight text-slate-900 shadow-lg backdrop-blur-xl transition hover:bg-white lg:right-4 lg:top-4"
+          aria-label="เราช่วยกัน กลับหน้าแรก"
+        >
+          เราช่วยกัน
+        </a>
+      )}
 
       {/* Apple-Maps-style floating panel: left card on desktop, bottom sheet on mobile */}
-      <div className="absolute inset-x-3 bottom-3 z-20 mx-auto max-h-[70dvh] w-auto overflow-y-auto rounded-[26px] border border-white/60 bg-white/65 shadow-[0_32px_90px_-12px_hsl(220_40%_15%/0.4),0_6px_24px_hsl(220_30%_18%/0.16)] backdrop-blur-2xl supports-[backdrop-filter]:bg-white/55 sm:inset-x-4 lg:inset-x-auto lg:bottom-4 lg:left-4 lg:top-4 lg:mx-0 lg:max-h-none lg:w-[408px] lg:overflow-y-auto">
+      <div
+        className={`absolute inset-x-3 bottom-3 z-20 mx-auto w-auto overflow-y-auto rounded-[26px] border border-white/60 bg-white/65 shadow-[0_32px_90px_-12px_hsl(220_40%_15%/0.4),0_6px_24px_hsl(220_30%_18%/0.16)] backdrop-blur-2xl supports-[backdrop-filter]:bg-white/55 sm:inset-x-4 lg:inset-x-auto lg:bottom-4 lg:left-4 lg:top-4 lg:mx-0 lg:max-h-none lg:w-[408px] lg:overflow-y-auto ${
+          embedded ? "max-h-[62%]" : "max-h-[70dvh]"
+        }`}
+      >
         <div className="sticky top-0 z-10 bg-gradient-to-b from-white/95 via-white/85 to-transparent pb-1 pt-1">
           <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-slate-300/80 lg:hidden" aria-hidden="true" />
         </div>
@@ -733,8 +742,8 @@ export function TravelRoutePlanner() {
                 placeholder="เช่น บางนา กรุงเทพ"
                 value={originQuery}
                 selected={selectedOrigin}
-                iconClassName="text-sky-500"
-                onChange={setOriginQuery}
+            iconClassName="text-slate-400"
+            onChange={setOriginQuery}
                 onSelect={setSelectedOrigin}
                 suffixAction={
                   <button
@@ -761,8 +770,8 @@ export function TravelRoutePlanner() {
                 placeholder="เช่น รังสิต ปทุมธานี"
                 value={destinationQuery}
                 selected={selectedDestination}
-                iconClassName="text-cyan-500"
-                onChange={setDestinationQuery}
+            iconClassName="text-slate-400"
+            onChange={setDestinationQuery}
                 onSelect={setSelectedDestination}
               />
               <Button className="h-12 w-full rounded-2xl px-6 text-[15px]" type="submit" disabled={isLoading}>
