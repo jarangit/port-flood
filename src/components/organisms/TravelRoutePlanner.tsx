@@ -6,6 +6,8 @@ import {
   AlertTriangle,
   Bike,
   Car,
+  ChevronDown,
+  ChevronUp,
   CloudRain,
   Droplets,
   Flag,
@@ -15,6 +17,8 @@ import {
   RadioTower,
   Route,
   ShieldCheck,
+  Users,
+  Video,
 } from "lucide-react";
 
 import { riskLevelLabels, type RiskLevel } from "@/config/risk-levels";
@@ -279,6 +283,13 @@ function stationConfidenceLine(segment: RouteRiskSegment) {
 }
 
 function LoadingAnalysisCard() {
+  const [isSlow, setIsSlow] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setIsSlow(true), 3000);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <section>
       <div className="flex min-w-0 items-center gap-3">
@@ -290,6 +301,12 @@ function LoadingAnalysisCard() {
           <p className="text-xs leading-5 text-slate-500">อาจใช้เวลาสักครู่ เพราะต้องตรวจหลายจุดตามเส้นทาง</p>
         </div>
       </div>
+      {isSlow ? (
+        <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-slate-500">
+          <Users className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>ช่วงนี้มีผู้ใช้งานจำนวนมาก ระบบอาจตอบช้ากว่าปกติ ขอบคุณที่รอครับ</span>
+        </p>
+      ) : null}
       <div className="mt-4 grid gap-1.5">
         {loadingSteps.map((step, index) => (
           <div key={step} className="flex items-center gap-2.5 rounded-2xl bg-slate-100 px-3 py-2 text-[13px] text-slate-600">
@@ -622,6 +639,7 @@ export function TravelRoutePlanner({ embedded = false }: { embedded?: boolean })
   const [isLocating, setIsLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<RouteRiskResponse | null>(null);
+  const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
 
   function handleUseCurrentLocation() {
     setError(null);
@@ -657,6 +675,7 @@ export function TravelRoutePlanner({ embedded = false }: { embedded?: boolean })
     event.preventDefault();
     setError(null);
     setResult(null);
+    setIsSheetCollapsed(false);
 
     if (!originQuery.trim() || !destinationQuery.trim()) {
       setError("กรุณากรอกต้นทางและปลายทาง");
@@ -684,6 +703,7 @@ export function TravelRoutePlanner({ embedded = false }: { embedded?: boolean })
       }
 
       setResult(data as RouteRiskResponse);
+      if (window.innerWidth < 1024) setIsSheetCollapsed(true);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "วิเคราะห์เส้นทางไม่สำเร็จ");
     } finally {
@@ -723,13 +743,39 @@ export function TravelRoutePlanner({ embedded = false }: { embedded?: boolean })
       {/* Apple-Maps-style floating panel: left card on desktop, bottom sheet on mobile */}
       <div
         className={`absolute inset-x-3 bottom-3 z-20 mx-auto w-auto overflow-y-auto rounded-[26px] border border-white/60 bg-white/65 shadow-[0_32px_90px_-12px_hsl(220_40%_15%/0.4),0_6px_24px_hsl(220_30%_18%/0.16)] backdrop-blur-2xl supports-[backdrop-filter]:bg-white/55 sm:inset-x-4 lg:inset-x-auto lg:bottom-4 lg:left-4 lg:top-4 lg:mx-0 lg:max-h-none lg:w-[408px] lg:overflow-y-auto ${
-          embedded ? "max-h-[62%]" : "max-h-[70dvh]"
+          isSheetCollapsed && result
+            ? "max-h-[104px]"
+            : embedded
+              ? "max-h-[62%]"
+              : "max-h-[70dvh]"
         }`}
       >
         <div className="sticky top-0 z-10 bg-gradient-to-b from-white/95 via-white/85 to-transparent pb-1 pt-1">
-          <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-slate-300/80 lg:hidden" aria-hidden="true" />
+          {result ? (
+            <button
+              type="button"
+              onClick={() => setIsSheetCollapsed((collapsed) => !collapsed)}
+              aria-expanded={!isSheetCollapsed}
+              aria-label={isSheetCollapsed ? "ขยายแผงผลลัพธ์" : "ย่อแผงผลลัพธ์เพื่อดูแผนที่"}
+              className="block w-full px-3 pt-1 lg:hidden"
+            >
+              <span className="mx-auto block h-1 w-10 rounded-full bg-slate-300/80" aria-hidden="true" />
+              <span className="mt-1 flex items-center justify-between gap-2 py-1 text-left">
+                <span className="truncate text-xs font-semibold text-slate-700">
+                  {result.distanceKm} กม. · ประมาณ {result.durationMin} นาที
+                </span>
+                {isSheetCollapsed ? (
+                  <ChevronUp className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                )}
+              </span>
+            </button>
+          ) : (
+            <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-slate-300/80 lg:hidden" aria-hidden="true" />
+          )}
         </div>
-        <div className="px-4 pb-4 sm:px-5 sm:pb-5">
+        <div className={`px-4 pb-4 sm:px-5 sm:pb-5 ${isSheetCollapsed && result ? "hidden lg:block" : ""}`}>
           <div className="mt-3">
             <h1 className="text-[17px] font-semibold tracking-tight text-slate-900">วางแผนเส้นทาง</h1>
             <p className="mt-0.5 text-[13px] leading-5 text-slate-500">ตรวจน้ำท่วมตามเส้นทางก่อนออกเดินทาง</p>
